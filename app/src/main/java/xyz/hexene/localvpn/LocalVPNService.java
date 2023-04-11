@@ -17,6 +17,8 @@
 package xyz.hexene.localvpn;
 
 import android.app.PendingIntent;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.VpnService;
 import android.os.ParcelFileDescriptor;
@@ -58,37 +60,15 @@ public class LocalVPNService extends VpnService
     private Selector udpSelector;
     private Selector tcpSelector;
 
+    public static void stop(Context context) {
+
+    }
+
     @Override
     public void onCreate()
     {
         super.onCreate();
-        isRunning = true;
-        setupVPN();
-        try
-        {
-            udpSelector = Selector.open();
-            tcpSelector = Selector.open();
-            deviceToNetworkUDPQueue = new ConcurrentLinkedQueue<>();
-            deviceToNetworkTCPQueue = new ConcurrentLinkedQueue<>();
-            networkToDeviceQueue = new ConcurrentLinkedQueue<>();
 
-            executorService = Executors.newFixedThreadPool(5);
-            executorService.submit(new UDPInput(networkToDeviceQueue, udpSelector));
-            executorService.submit(new UDPOutput(deviceToNetworkUDPQueue, udpSelector, this));
-            executorService.submit(new TCPInput(networkToDeviceQueue, tcpSelector));
-            executorService.submit(new TCPOutput(deviceToNetworkTCPQueue, networkToDeviceQueue, tcpSelector, this));
-            executorService.submit(new VPNRunnable(vpnInterface.getFileDescriptor(),
-                    deviceToNetworkUDPQueue, deviceToNetworkTCPQueue, networkToDeviceQueue));
-            LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(BROADCAST_VPN_STATE).putExtra("running", true));
-            Log.i(TAG, "Started");
-        }
-        catch (IOException e)
-        {
-            // TODO: Here and elsewhere, we should explicitly notify the user of any errors
-            // and suggest that they stop the service, since we can't do it ourselves
-            Log.e(TAG, "Error starting service", e);
-            cleanup();
-        }
     }
 
     private void setupVPN()
@@ -105,6 +85,42 @@ public class LocalVPNService extends VpnService
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
+        if (intent == null) {
+            return START_STICKY;
+        }
+
+        if ("ACTION_START".equals(intent.getAction())) {
+            isRunning = true;
+            setupVPN();
+            try
+            {
+                udpSelector = Selector.open();
+                tcpSelector = Selector.open();
+                deviceToNetworkUDPQueue = new ConcurrentLinkedQueue<>();
+                deviceToNetworkTCPQueue = new ConcurrentLinkedQueue<>();
+                networkToDeviceQueue = new ConcurrentLinkedQueue<>();
+
+                executorService = Executors.newFixedThreadPool(5);
+                executorService.submit(new UDPInput(networkToDeviceQueue, udpSelector));
+                executorService.submit(new UDPOutput(deviceToNetworkUDPQueue, udpSelector, this));
+                executorService.submit(new TCPInput(networkToDeviceQueue, tcpSelector));
+                executorService.submit(new TCPOutput(deviceToNetworkTCPQueue, networkToDeviceQueue, tcpSelector, this));
+                executorService.submit(new VPNRunnable(vpnInterface.getFileDescriptor(),
+                        deviceToNetworkUDPQueue, deviceToNetworkTCPQueue, networkToDeviceQueue));
+                LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(BROADCAST_VPN_STATE).putExtra("running", true));
+                Log.i(TAG, "Started");
+            }
+            catch (IOException e)
+            {
+                // TODO: Here and elsewhere, we should explicitly notify the user of any errors
+                // and suggest that they stop the service, since we can't do it ourselves
+                Log.e(TAG, "Error starting service", e);
+                cleanup();
+            }
+        }
+        if ("ACTION_STOP".equals(intent.getAction())) {
+            onDestroy();
+        }
         return START_STICKY;
     }
 

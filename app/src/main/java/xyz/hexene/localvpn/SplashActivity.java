@@ -39,8 +39,9 @@ public class SplashActivity extends AppCompatActivity {
                 switch (resultCode) {
                     case RESULT_OK:
                         waitingForVPNStart = true;
-                        startService(new Intent(this, LocalVPNService.class));
+                        startService(new Intent(this, LocalVPNService.class).setAction("ACTION_START"));
                         startActivity(new Intent(this, LocalVPN.class));
+                        finish();
                         break;
                     case RESULT_CANCELED:
                         startVPN();
