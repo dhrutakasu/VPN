@@ -16,7 +16,6 @@
 
 package xyz.hexene.localvpn;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -24,18 +23,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.VpnService;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class LocalVPN extends AppCompatActivity {
     private static final int VPN_REQUEST_CODE = 0x0F;
-
     private boolean waitingForVPNStart;
 
     private BroadcastReceiver vpnStateReceiver = new BroadcastReceiver() {
@@ -85,7 +81,6 @@ public class LocalVPN extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         enableButton(!waitingForVPNStart && !LocalVPNService.isRunning());
     }
 
@@ -102,7 +97,6 @@ public class LocalVPN extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-
         AlertDialog.Builder builder = new AlertDialog.Builder(LocalVPN.this);
         builder.setTitle(R.string.app_name);
         builder.setIcon(R.drawable.ic_launcher);
@@ -121,6 +115,5 @@ public class LocalVPN extends AppCompatActivity {
                 });
         AlertDialog alert = builder.create();
         alert.show();
-
     }
 }
